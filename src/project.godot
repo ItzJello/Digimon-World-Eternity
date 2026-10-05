@@ -1,0 +1,39 @@
+; Engine configuration file.
+
+config_version=5
+
+[application]
+
+config/name="Digimon World Eternity"
+config/features=PackedStringArray("4.7", "C#")
+run/main_scene="res://scenes/menus/start.tscn"
+boot_splash/bg_color=Color(0.02, 0.03, 0.08, 1)
+boot_splash/image="res://assets/boot/apex_logic.png"
+boot_splash/minimum_display_time=2800
+boot_splash/show_image=true
+boot_splash/stretch_mode=4
+boot_splash/use_filter=true
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+
+[autoload]
+
+GameSession="*res://core/GameSession.cs"
+
+[audio]
+
+driver/mix_rate=48000
+driver/output_latency=150
+
+[dotnet]
+
+project/assembly_name="DigimonWorldEternity"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+lights_and_shadows/directional_shadow/size=4096
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality=2

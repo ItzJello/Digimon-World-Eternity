@@ -1,0 +1,19 @@
+{
+  "source": "Digimon Story Time Stranger",
+  "asset": "Agumon",
+  "slug": "agumon",
+  "chr_id": "chr050",
+  "type": "digimon",
+  "source_format": "MVGL/geom",
+  "intermediate_format": "glb",
+  "runtime_format": "pending (dwm)",
+  "tool": "dsts-extractor",
+  "tool_version": "0.8.7",
+  "glb": "private/reference/time-stranger/glb/agumon.glb",
+  "bones": 25,
+  "meshes": 6,
+  "textures": 18,
+  "animations": 32,
+  "conversion_status": "extracted",
+  "runtime_test": false
+}

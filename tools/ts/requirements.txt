@@ -1,0 +1,2 @@
+# Local venv only (tools/ts/.venv). Do not install globally.
+dsts-extractor==0.8.7

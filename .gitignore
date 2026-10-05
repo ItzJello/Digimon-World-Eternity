@@ -1,0 +1,69 @@
+# Build outputs and tooling noise — game dumps for private testing are allowed in-tree.
+
+# Build
+build/
+build-*/
+out/
+cmake-build-*/
+*.obj
+*.o
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.exp
+compile_commands.json
+
+# IDE / OS
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Decomp local build trees (regenerable)
+vendor/dw_decomp/disks/
+vendor/dw_decomp/build/
+vendor/dw_decomp/generated/
+vendor/dw_decomp/.venv/
+vendor/dw_decomp/bin/
+vendor/dw_decomp/
+vendor/
+# Optional: uncomment if disc images are too large for git and you want them local-only
+# private/disc/*.bin
+# private/disc/*.cue
+
+# Time Stranger reference data (unpacked game archives + exported GLBs) — never commit
+private/reference/
+private/disc/
+private/
+dw1/
+tools/ts/.venv/
+
+# Godot cache and C# build output
+src/.godot/
+src/.mono/
+src/**/bin/
+src/**/obj/
+
+# Runtime art, hosted outside the repo. See src/assets/README.md.
+# Contents are ignored; .gdignore stays so Godot does not import the pack.
+src/assets/audio/*
+!src/assets/audio/.gdignore
+src/assets/effects/*
+!src/assets/effects/.gdignore
+src/assets/maps/*
+!src/assets/maps/.gdignore
+src/assets/models/*
+!src/assets/models/.gdignore
+src/assets/stages/*
+!src/assets/stages/.gdignore
