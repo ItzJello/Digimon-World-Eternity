@@ -1,4 +1,5 @@
 using Godot;
+using System;
 
 namespace DigimonWorldEternity;
 
@@ -16,7 +17,11 @@ public partial class EscapeMenu : CanvasLayer
     private Label _sheetBody = null!;
     private string _sheetSlug = "agumon";
     private VBoxContainer _storage = null!;
+    private VBoxContainer _maps = null!;
+    private VBoxContainer _mapList = null!;
+    private LineEdit _filter = null!;
     private Button? _returnButton;
+    private Button? _flyButton;
 
     public override void _Ready()
     {
@@ -50,6 +55,9 @@ public partial class EscapeMenu : CanvasLayer
         _main.AddChild(Title("Menu"));
         _main.AddChild(MakeButton("Resume", Close));
         _main.AddChild(MakeButton("Partner", ShowPartners));
+        _main.AddChild(MakeButton("Maps", ShowMaps));
+        _flyButton = MakeButton("Fly  off", ToggleFly);
+        _main.AddChild(_flyButton);
         _main.AddChild(MakeButton("Storage", ShowStorage));
         _returnButton = MakeButton("Return to the lobby", () =>
         {
@@ -94,6 +102,25 @@ public partial class EscapeMenu : CanvasLayer
         storageNote.AddThemeColorOverride("font_color", new Color(0.86f, 0.9f, 0.95f));
         _storage.AddChild(storageNote);
         _storage.AddChild(MakeButton("Back", ShowMain));
+
+        _maps = BuildPage(pages);
+        _maps.Visible = false;
+        _maps.AddChild(Title("Maps"));
+        _filter = new LineEdit { PlaceholderText = "Filter, such as forest or t0102" };
+        _filter.AddThemeColorOverride("font_color", Colors.White);
+        _filter.AddThemeColorOverride("font_placeholder_color", new Color(0.7f, 0.78f, 0.86f));
+        _filter.TextChanged += _ => FillMaps();
+        _maps.AddChild(_filter);
+        var scroll = new ScrollContainer
+        {
+            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
+            CustomMinimumSize = new Vector2(0, 340),
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+        };
+        _maps.AddChild(scroll);
+        _mapList = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        scroll.AddChild(_mapList);
+        _maps.AddChild(MakeButton("Back", ShowMain));
     }
 
     /// <summary>
@@ -125,6 +152,7 @@ public partial class EscapeMenu : CanvasLayer
         bool inCity = GetTree().CurrentScene?.SceneFilePath == GameSession.LobbyScene;
         if (_returnButton != null)
             _returnButton.Visible = !inCity;
+        RefreshFly();
         ShowMain();
     }
 
@@ -141,7 +169,54 @@ public partial class EscapeMenu : CanvasLayer
         _partners.Visible = false;
         _sheet.Visible = false;
         _storage.Visible = false;
+        _maps.Visible = false;
         MarkCurrentPartner();
+        RefreshFly();
+    }
+
+    private void ShowMaps()
+    {
+        _main.Visible = false;
+        _partners.Visible = false;
+        _sheet.Visible = false;
+        _storage.Visible = false;
+        _maps.Visible = true;
+        FillMaps();
+    }
+
+    private void ToggleFly()
+    {
+        GameSession.Current.Fly = !GameSession.Current.Fly;
+        RefreshFly();
+    }
+
+    private void RefreshFly()
+    {
+        if (_flyButton != null)
+            _flyButton.Text = GameSession.Current.Fly ? "Fly  on" : "Fly  off";
+    }
+
+    private void FillMaps()
+    {
+        foreach (Node child in _mapList.GetChildren())
+            child.QueueFree();
+        string needle = _filter.Text.Trim();
+        foreach (string stem in WalkMaps.Available())
+        {
+            string label = MapLabel(stem);
+            if (needle.Length > 0
+                && !stem.Contains(needle, StringComparison.OrdinalIgnoreCase)
+                && !label.Contains(needle, StringComparison.OrdinalIgnoreCase))
+                continue;
+            string chosen = stem;
+            var button = MakeButton(label, () =>
+            {
+                Close();
+                GameSession.Current.OpenWalkMap(chosen);
+            });
+            button.CustomMinimumSize = new Vector2(280, 40);
+            _mapList.AddChild(button);
+        }
     }
 
     private void ShowPartners()
@@ -150,6 +225,7 @@ public partial class EscapeMenu : CanvasLayer
         _partners.Visible = true;
         _sheet.Visible = false;
         _storage.Visible = false;
+        _maps.Visible = false;
         MarkCurrentPartner();
     }
 
@@ -159,6 +235,7 @@ public partial class EscapeMenu : CanvasLayer
         _partners.Visible = false;
         _sheet.Visible = false;
         _storage.Visible = true;
+        _maps.Visible = false;
     }
 
     private void ShowSheet(string slug)
@@ -170,6 +247,7 @@ public partial class EscapeMenu : CanvasLayer
         _main.Visible = false;
         _partners.Visible = false;
         _storage.Visible = false;
+        _maps.Visible = false;
         _sheet.Visible = true;
         GameSession.Current.SetPartner(slug);
         MarkCurrentPartner();
@@ -198,6 +276,15 @@ public partial class EscapeMenu : CanvasLayer
                 : record.DisplayName;
         }
     }
+
+    private static string MapLabel(string stem) => stem.ToLowerInvariant() switch
+    {
+        "t3001f" => "Bar",
+        "t3002f" => "Cinema",
+        "t3003f" => "VIP room",
+        "t3004f" => "Lounge",
+        _ => stem,
+    };
 
     private static VBoxContainer BuildPage(Control parent)
     {

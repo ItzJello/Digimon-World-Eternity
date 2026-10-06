@@ -1,0 +1,31 @@
+{
+ "code": "t3002",
+ "collision": {
+  "glb": "t3002c",
+  "meshes": [
+   "col_t3002c_cam",
+   "col_t3002c_ncam",
+   "col_t3002c",
+   "col_t3002c"
+  ]
+ },
+ "starts": {
+  "start_00": {
+   "at": [
+    0.0,
+    2.781,
+    13.863
+   ],
+   "yaw": 180.0
+  }
+ },
+ "exits": [],
+ "borders": [],
+ "sun": {
+  "from": [
+   -0.0,
+   289.78,
+   -77.65
+  ]
+ }
+}

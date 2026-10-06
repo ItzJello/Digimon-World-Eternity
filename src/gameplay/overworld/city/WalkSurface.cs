@@ -38,6 +38,55 @@ public partial class WalkSurface : Node3D
         GD.Print($"collision shapes {count}");
     }
 
+    /// <summary>
+    /// Collision from the map config. Listed meshes block even after the
+    /// texture pass hides them. Border props parented under MapBorders block too.
+    /// </summary>
+    public void BuildConfigured(Node3D city, IReadOnlySet<string> solid)
+    {
+        int count = 0;
+        foreach (MeshInstance3D mesh in MeshQuery.Find(city))
+        {
+            string raw = mesh.Name.ToString();
+            string name = raw.ToLowerInvariant();
+            if (name.Contains("sky") || name.Contains("outline") || name.Contains("shadow"))
+                continue;
+            if (!solid.Contains(raw) && !solid.Contains(BaseName(raw)) && !UnderBorders(mesh))
+                continue;
+            Shape3D? shape = mesh.Mesh?.CreateTrimeshShape();
+            if (shape == null)
+                continue;
+            var body = new StaticBody3D
+            {
+                Transform = mesh.GlobalTransform,
+                CollisionLayer = 1,
+                CollisionMask = 1,
+            };
+            body.AddChild(new CollisionShape3D { Shape = shape });
+            AddChild(body);
+            if (name.Contains("sidewalk") || name.Contains("ground") || name.Contains("stair"))
+                Samples.Add(mesh.GlobalTransform * mesh.GetAabb().GetCenter());
+            count++;
+        }
+        GD.Print($"collision shapes {count}");
+    }
+
+    private static string BaseName(string name)
+    {
+        int at = name.LastIndexOf('@');
+        return at > 0 ? name[..at] : name;
+    }
+
+    private static bool UnderBorders(Node node)
+    {
+        for (Node? cursor = node; cursor != null; cursor = cursor.GetParent())
+        {
+            if (cursor.Name == "MapBorders")
+                return true;
+        }
+        return false;
+    }
+
     public bool TryStand(Vector3 xz, float nearY, bool anyHeight, out Vector3 grounded)
     {
         grounded = new Vector3(xz.X, nearY, xz.Z);

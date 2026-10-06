@@ -24,6 +24,7 @@ public partial class LobbyRoot : Node3D
     private int _fpsFrames;
     private double _fpsWorst;
     private Vector3 _gate;
+    private ulong _arrived;
 
     public override void _Ready()
     {
@@ -102,7 +103,9 @@ public partial class LobbyRoot : Node3D
         else
             _hint.Text = _chat.IsTyping
                 ? "Enter  Send    Esc  Close chat"
-                : "WASD move    Shift run    Enter chat    Esc settings    E talk";
+                : GameSession.Current.Fly
+                    ? "Fly    WASD move    Space up    Ctrl down    Shift fast    Esc menu"
+                    : "WASD move    Shift run    Enter chat    /gm <map>    E talk    Esc settings";
         _fpsFrames++;
         if (delta > _fpsWorst)
             _fpsWorst = delta;
@@ -161,12 +164,32 @@ public partial class LobbyRoot : Node3D
         if (!placed)
             _ground.TryStand(Vector3.Zero, 1.0f, true, out grounded);
 
-        _walker.GlobalPosition = grounded + new Vector3(0, 0.05f, 0);
+        Vector3 spawn = grounded;
+        if (GameSession.Current.HasLobbyReturn)
+        {
+            Vector3 back = GameSession.Current.LobbyReturn;
+            GameSession.Current.ClearLobbyReturn();
+            if (_ground.TryStand(back, back.Y, true, out Vector3 returned))
+                spawn = returned;
+        }
+
+        _walker.GlobalPosition = spawn + new Vector3(0, 0.05f, 0);
         _gate = grounded + new Vector3(0, 0, 6);
         if (_ground.TryStand(_gate, grounded.Y, false, out Vector3 gateGround))
             _gate = gateGround;
         AddGate(_gate);
         PlaceNpcs();
+        _arrived = Time.GetTicksMsec();
+        LobbyPaths.Place(this, _ground, OnPath);
+    }
+
+    private void OnPath(string destination, string start, Vector3 back)
+    {
+        if (Time.GetTicksMsec() - _arrived < 1500)
+            return;
+        GameSession.Current.RememberLobbySpot(back);
+        GameSession.Current.LobbyLink = destination;
+        Callable.From(() => GameSession.Current.OpenWalkMap(destination, start)).CallDeferred();
     }
 
     private void PlaceNpcs()

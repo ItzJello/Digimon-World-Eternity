@@ -50,6 +50,23 @@ public partial class GameSession : Node
     /// <summary>Debug choice for the next match. Empty means roll on session start.</summary>
     public string QueuedField { get; private set; } = "";
 
+    /// <summary>Walk map the city scene should open. Empty means the plaza.</summary>
+    public string WalkMap { get; private set; } = "";
+
+    /// <summary>Start point on that map, such as start_00. Empty means the map's first start.</summary>
+    public string WalkStart { get; private set; } = "";
+
+    /// <summary>Debug flight. The walker ignores gravity and collision.</summary>
+    public bool Fly { get; set; }
+
+    /// <summary>Where to put the player when a connected map sends them back.</summary>
+    public bool HasLobbyReturn { get; private set; }
+
+    /// <summary>Walk map opened from a park path. That visit can step back to the lobby.</summary>
+    public string LobbyLink { get; set; } = "";
+
+    public Vector3 LobbyReturn { get; private set; }
+
     public event Action? PartnerChanged;
     public event Action? PlayerChanged;
 
@@ -134,6 +151,31 @@ public partial class GameSession : Node
     }
 
     public void QueueField(string stem) => QueuedField = stem ?? "";
+
+    /// <summary>Drop the player onto a walk map. The park lobby is a different scene.</summary>
+    public void OpenWalkMap(string stem, string start = "")
+    {
+        if (string.IsNullOrWhiteSpace(stem))
+            return;
+        WalkMap = stem.Trim();
+        WalkStart = start.Trim();
+        Travel(CityScene, WalkMap);
+    }
+
+    public void RememberLobbySpot(Vector3 at)
+    {
+        HasLobbyReturn = true;
+        LobbyReturn = at;
+    }
+
+    public void ClearLobbyReturn() => HasLobbyReturn = false;
+
+    public void ReturnToLobby()
+    {
+        WalkMap = "";
+        WalkStart = "";
+        Travel(LobbyScene, "Returning to File City");
+    }
 
     /// <summary>Keep the open match on this field while a debug bout swaps maps.</summary>
     public void PinField(string stem)
