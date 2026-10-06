@@ -1,23 +1,25 @@
 # Digimon World Eternity
 
-A **DW1-lite** Digimon World client: a walkable city lobby, then an Arena match, then back to the lobby. Online play is aimed at Arena first.
+A **standalone Digimon game** inspired by **Digimon World**. The product is **arena combat and PvP**: pick a command, the Digimon fights, and the bout is the point of the game. The city is the walkable lobby you pass through on the way into a match and back out again.
 
-Fan project for **private testing only**. Digimon World is © Bandai. Local dumps and extracted assets may live in this tree for development.
+Fan project for **private testing only**. Digimon is © Bandai. Local dumps and extracted assets may live in this tree for development.
 
-The client is a **Godot 4.7 .NET** app in [`src/`](src/). Visuals come from Digimon Story Time Stranger models. Combat behavior is the DW1 Arena: commands, spacing, and techniques.
+The game is a **Godot 4.7 .NET** app in [`src/`](src/). Combat follows the Digimon World arena: commands, spacing, and techniques. Current visuals are Digimon Story Time Stranger models. Shaders and art get their own pass later.
 
 ---
 
 ## Product loop
 
+Arena matches are the loop. The lobby is how you reach one.
+
 ```text
-        CITY LOBBY (walk, partner, presence)
+        CITY LOBBY (walk, partner, queue)
                     │
                     ▼
               ARENA GATE
                     │
                     ▼
-           ARENA BATTLE (commands + AI)
+        ARENA BOUT (commands + AI, then PvP)
                     │
                     ▼
                  RESULT
@@ -26,22 +28,20 @@ The client is a **Godot 4.7 .NET** app in [`src/`](src/). Visuals come from Digi
               CITY LOBBY
 ```
 
-Arena is its **own game system**. The lobby camera and the battle camera do not share a control model.
-
----
+The bout is its **own system**. The lobby camera and the battle camera do not share a control model. A future server syncs the **simulation**, not the camera.
 
 ## Goals
 
-1. **All-in-one client** — Run the Godot project. No `.cue` / `.bin`, no disc picker at launch.
-2. **Windows 11 first** — Godot .NET editor and export. Linux is for builds and preview.
-3. **Arena first** — Command battles that feel like DW1. Online matches after the bout feels right.
-4. **City as lobby** — Walk, meet, take the partner into the Arena. A full raising sim or island MMO waits.
+1. **Standalone game** — Run the Godot project. No `.cue` / `.bin`, no disc picker, no retail-disc boot.
+2. **Arena combat and PvP** — This is the game. Command bouts first, then player versus player on that same sim.
+3. **Windows 11 first** — Godot .NET editor and export. Linux is for builds and preview.
+4. **City as the lobby** — Walk in, bring a partner, enter the Arena. A raising sim or island MMO is not the goal.
 
 ---
 
 ## How Arena works
 
-Combat is **not turn-based** and **not a fighting-game stick**. The player issues a **command**. The Digimon AI handles approach, retreat, technique choice, distance, and timing.
+This is the current bout, and it is what PvP will run. Combat is **not turn-based** and **not a fighting-game stick**. The player issues a **command**. The Digimon AI handles approach, retreat, technique choice, distance, and timing.
 
 | Player does | Digimon AI does |
 | --- | --- |
@@ -51,7 +51,7 @@ Combat is **not turn-based** and **not a fighting-game stick**. The player issue
 
 **Distance is a combat variable.** Technique range and the current command decide when a swing can connect. The skill effect is a client visual. Damage is applied by the bout when the swing connects, not when the effect model arrives.
 
-**Battle camera** follows the two combatants. It stays client-side. A future server syncs the **simulation**, not the camera.
+**Battle camera** follows the two combatants. It stays client-side.
 
 ### Digimon stats (DW1 six — keep the names)
 
@@ -156,10 +156,10 @@ Element, technique timing, and crits are not in the damage roll. Speed does not 
 
 | Layer | Choice |
 | --- | --- |
-| Client | Godot 4.7, Forward+, C# (`DigimonWorldEternity`) |
+| Game | Godot 4.7, Forward+, C# (`DigimonWorldEternity`) |
 | Code | `src/core/`, `src/gameplay/`, `src/presentation/`; scenes in `src/scenes/` |
-| Models, maps, effects | Time Stranger GLBs under `src/assets/` (gitignored; see `src/assets/README.md`) |
-| Arena / lobby services | Later. Commands in, sim state out. Camera and VFX stay on the client. |
+| Models, maps, effects | Time Stranger GLBs under `src/assets/` for now (gitignored; see `src/assets/README.md`) |
+| PvP | Later, on the arena sim. Commands in, sim state out. Camera and VFX stay on the client. |
 
 ---
 
@@ -167,11 +167,11 @@ Element, technique timing, and crits are not in the damage roll. Speed does not 
 
 | Area | Now |
 | --- | --- |
-| Title | Create / load a tamer, Arena debug, model viewer |
-| Lobby | Shinjuku park and the plaza. Partner follows. Enter the Arena from there. |
-| Arena | Command bout, flinch, knockdown held at the last pose, floating damage and misses, skill effects |
-| Models | Time Stranger Digimon, NPCs, and bosses exported into `src/assets/` |
-| Net | Not started. Arena feel and the stat rules come first. |
+| Arena | The focus. Command bout, flinch, knockdown, combat text, skill effects. Stat rules, then PvP on this sim. |
+| Title | Create / load a tamer and enter a match |
+| Lobby | The walkable way into the Arena. Partner follows. |
+| Art | Time Stranger meshes for now. Shader and asset pass later. |
+| PvP | Not started. The bout has to feel right first. |
 
 ---
 
@@ -179,19 +179,19 @@ Element, technique timing, and crits are not in the damage roll. Speed does not 
 
 **In**
 
-- Godot client, no runtime disc load.
-- Lobby → Arena → result.
-- Command Arena with distance, techniques, flinch, and knockdown.
-- Time Stranger meshes, clips, and effect textures for those scenes.
-- A stat plan that uses the six DW1 names, then wiring that plan into the bout.
-- Online Arena after the bout feels right.
+- A standalone Godot game. No runtime disc load.
+- Arena combat: commands, distance, techniques, flinch, and knockdown.
+- PvP on that same bout, once the fight feels right.
+- A lobby that exists to reach the Arena and return from it.
+- The six Digimon World stat names, then a plan for how they change a bout.
+- Current Time Stranger meshes until the art pass.
 
-**Out for now**
+**Out**
 
-- Public redistribution of the project or game data.
-- Full-island MMO or a full raising schedule.
-- Direct stick control of the Digimon in Arena.
-- Booting the retail PS1 disc, or injecting into the original `.bin`.
+- A raising sim, care schedule, or island MMO.
+- Direct stick control of the Digimon in the Arena.
+- Booting a retail disc, or injecting into an original `.bin`.
+- Public redistribution of the project or of game data.
 
 ---
 
@@ -199,7 +199,7 @@ Element, technique timing, and crits are not in the damage roll. Speed does not 
 
 | Path | Role |
 | --- | --- |
-| `src/` | The client. Main scene `scenes/menus/start.tscn`. Layout in [docs/LAYOUT.md](docs/LAYOUT.md). |
+| `src/` | The game. Main scene `scenes/menus/start.tscn`. Layout in [docs/LAYOUT.md](docs/LAYOUT.md). |
 | `src/core/` | Session autoload, repo paths, loaders |
 | `src/gameplay/combat/` | Battle sim: commands, steering, damage, AI. No scene nodes. |
 | `src/gameplay/arena/` | Arena mode: gate, card, bracket, fields, bout binding |
