@@ -316,8 +316,10 @@ public partial class ActorVisual : Node3D
                 if (meshName.Contains("outline"))
                 {
                     mesh.Visible = false;
+                    mesh.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
                     continue;
                 }
+                mesh.CastShadow = GeometryInstance3D.ShadowCastingSetting.On;
                 // Show the imported color sheet. A grey multiply was flattening
                 // the outfit and the face into one flat tone.
                 copy.AlbedoColor = Colors.White;

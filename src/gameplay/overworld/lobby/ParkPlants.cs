@@ -140,10 +140,9 @@ public static class ParkPlants
                     continue;
                 if (!cache.TryGetValue(file, out Texture2D? texture))
                 {
-                    var image = new Image();
-                    if (image.Load(Path.Combine(textures, file)) != Error.Ok)
+                    texture = CityPainter.LoadMapTexture(Path.Combine(textures, file), false);
+                    if (texture == null)
                         continue;
-                    texture = ImageTexture.CreateFromImage(image);
                     cache[file] = texture;
                 }
 
@@ -155,15 +154,16 @@ public static class ParkPlants
                     ShadingMode = BaseMaterial3D.ShadingModeEnum.PerPixel,
                     Metallic = 0,
                     Roughness = leaf ? 0.8f : 0.9f,
-                    TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmaps,
+                    TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic,
                     CullMode = leaf
                         ? BaseMaterial3D.CullModeEnum.Disabled
                         : BaseMaterial3D.CullModeEnum.Back,
                     Transparency = leaf
                         ? BaseMaterial3D.TransparencyEnum.AlphaScissor
                         : BaseMaterial3D.TransparencyEnum.Disabled,
-                    AlphaScissorThreshold = 0.4f,
+                    AlphaScissorThreshold = 0.25f,
                 };
+                CityPainter.AttachRelief(painted, textures, file);
                 mesh.SetSurfaceOverrideMaterial(surface, painted);
             }
         }
