@@ -68,6 +68,25 @@ public partial class StartMenu : Control
         AddChild(_previewHold);
         BuildCreate();
         PlayMenuMusic();
+        OpenStartupMap();
+    }
+
+    /// <summary>
+    /// <c>-- --walk t0101f [start_00]</c> on the command line skips the title and
+    /// drops the player onto that walk map. Debug only.
+    /// </summary>
+    private void OpenStartupMap()
+    {
+        string[] args = OS.GetCmdlineUserArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i] != "--walk")
+                continue;
+            string stem = args[i + 1];
+            string start = i + 2 < args.Length && !args[i + 2].StartsWith("--") ? args[i + 2] : "";
+            Callable.From(() => GameSession.Current.OpenWalkMap(stem, start)).CallDeferred();
+            return;
+        }
     }
 
     private void BuildCreate()

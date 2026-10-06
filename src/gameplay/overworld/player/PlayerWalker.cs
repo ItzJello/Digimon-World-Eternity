@@ -66,6 +66,13 @@ public partial class PlayerWalker : CharacterBody3D
         if (Body == null || _camera == null)
             return;
 
+        if (GameSession.Current.Fly)
+        {
+            FlyMove();
+            return;
+        }
+
+        CollisionMask = 1;
         Vector3 velocity = Velocity;
         if (IsOnFloor())
             velocity.Y = 0;
@@ -92,6 +99,33 @@ public partial class PlayerWalker : CharacterBody3D
 
         Velocity = velocity;
         MoveAndSlide();
+    }
+
+    private void FlyMove()
+    {
+        CollisionMask = 0;
+        Vector3 wish = Frozen ? Vector3.Zero : ReadWish();
+        float lift = 0;
+        if (!Frozen)
+        {
+            if (Input.IsPhysicalKeyPressed(Key.Space))
+                lift += 1;
+            if (Input.IsPhysicalKeyPressed(Key.Ctrl))
+                lift -= 1;
+        }
+        bool running = Input.IsPhysicalKeyPressed(Key.Shift);
+        float speed = running ? 16.0f : 7.0f;
+        Vector3 velocity = wish.LengthSquared() > 0.0001f ? wish.Normalized() * speed : Vector3.Zero;
+        velocity.Y = lift * speed;
+        Velocity = velocity;
+        MoveAndSlide();
+        if (wish.LengthSquared() > 0.0001f)
+        {
+            Rotation = new Vector3(0, Mathf.Atan2(wish.X, wish.Z), 0);
+            Body!.SetPace(true, running);
+        }
+        else
+            Body!.SetWalking(false);
     }
 
     private Vector3 ReadWish()

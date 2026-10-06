@@ -19,7 +19,8 @@ public partial class LobbyChat : CanvasLayer
 
     private readonly VBoxContainer _log = new();
     private readonly LineEdit _input = new();
-    private const int MaxLines = 8;
+    private ScrollContainer _scroll = null!;
+    private const int MaxLines = 60;
 
     public override void _Ready()
     {
@@ -46,14 +47,28 @@ public partial class LobbyChat : CanvasLayer
         frame.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         box.AddChild(frame);
 
-        _log.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-        _log.OffsetLeft = 18;
-        _log.OffsetTop = 14;
-        _log.OffsetRight = -16;
-        _log.OffsetBottom = -58;
+        // The log scrolls inside the frame. Long replies such as the map
+        // list stay in the box; the wheel over the chat scrolls back.
+        _scroll = new ScrollContainer
+        {
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            VerticalScrollMode = ScrollContainer.ScrollMode.Auto,
+            ClipContents = true,
+            MouseFilter = Control.MouseFilterEnum.Pass,
+        };
+        _scroll.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+        _scroll.OffsetLeft = 18;
+        _scroll.OffsetTop = 14;
+        _scroll.OffsetRight = -16;
+        _scroll.OffsetBottom = -58;
+        box.AddChild(_scroll);
+
+        _log.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        _log.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        _log.Alignment = BoxContainer.AlignmentMode.End;
         _log.AddThemeConstantOverride("separation", 2);
         _log.MouseFilter = Control.MouseFilterEnum.Ignore;
-        box.AddChild(_log);
+        _scroll.AddChild(_log);
 
         _input.SetAnchorsPreset(Control.LayoutPreset.BottomWide);
         _input.OffsetLeft = 16;
@@ -110,7 +125,23 @@ public partial class LobbyChat : CanvasLayer
         label.AddThemeFontSizeOverride("normal_font_size", 16);
         _log.AddChild(label);
         while (_log.GetChildCount() > MaxLines)
-            _log.GetChild(0).QueueFree();
+        {
+            Node oldest = _log.GetChild(0);
+            _log.RemoveChild(oldest);
+            oldest.QueueFree();
+        }
+        ScrollToEnd();
+    }
+
+    private async void ScrollToEnd()
+    {
+        if (!IsInsideTree())
+            return;
+        // The new label needs a layout pass before the range knows about it.
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        if (IsInstanceValid(_scroll))
+            _scroll.ScrollVertical = (int)_scroll.GetVScrollBar().MaxValue;
     }
 
     public void CloseInput()
@@ -135,6 +166,12 @@ public partial class LobbyChat : CanvasLayer
         CloseInput();
         if (line.Length == 0)
             return;
+        if (WalkMaps.TryCommand(line, out string walkReply))
+        {
+            foreach (string row in walkReply.Split('\n'))
+                Post("Debug", row);
+            return;
+        }
         if (ArenaMaps.TryCommand(line, out string reply))
         {
             foreach (string row in reply.Split('\n'))
